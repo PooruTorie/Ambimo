@@ -6,7 +6,7 @@
 
 TinyWS2812B leds(LED_PIN, NUM_LEDS);
 
-void startHandshake();
+void runCommand(int cmd);
 
 void setup() {
     Serial.begin(115200);
@@ -16,45 +16,35 @@ void setup() {
 
     leds.clear();
     leds.updateLeds();
-
-    startHandshake();
 }
 
-void startHandshake() {
-    while (Serial.available() == 0) {
-        Serial.write(0xfe);
-        Serial.write(0xfa);
-        delay(300);
-    }
-    Serial.read();
-}
-
-unsigned long time = 0;
-bool change = false;
+int color[3];
+size_t colorIndex = 0;
+int zone = 0;
 
 void loop() {
-    if (Serial.available() > 0) {
-        while (Serial.available() >= 4) {
-            int index = Serial.read();
-            int r = Serial.read();
-            int g = Serial.read();
-            int b = Serial.read();
+    while (Serial.available()) {
+        int data = Serial.read();
 
-            leds.setColor(index, r, g, b);
-            change = true;
+        if (data > 250) {
+            runCommand(data);
+        } else {
+            color[colorIndex] = data;
+            colorIndex++;
+            if (colorIndex == 3) {
+                leds.setColor(zone, color[0], color[1], color[2]);
+                colorIndex = 0;
+                zone++;
+            }
         }
-
-        Serial.write(0xff);
-        Serial.write(0xff);
-
-        delay(100);
     }
+}
 
-    if (change) {
-        if (millis() - time >= 100) {
-            change = false;
-            time = millis();
+void runCommand(int cmd) {
+    switch (cmd) {
+        case 0xff:
             leds.updateLeds();
-        }
+            colorIndex = 0;
+            zone = 0;
     }
 }
