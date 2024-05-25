@@ -1,11 +1,9 @@
-import math
 import time
 from typing import Optional, Tuple
 
-from PIL.Image import Resampling
-from matplotlib import pyplot
-from serial import Serial
 from PIL import ImageGrab
+from PIL.Image import Resampling
+from serial import Serial
 
 
 def handshake(seek: bytes, respond: Optional[bytes] = None) -> bytes:
@@ -34,18 +32,16 @@ def getColorData(index: int, color: Tuple[int, int, int]) -> bytes:
 	r, g, b = color
 	diff = (abs(r - g) + abs(g - b) + abs(r - b)) // 3 / 255
 	mean = (r + g + b) // 3 / 255
-	print(diff, mean)
 	z = diff * -(mean - 1)
 	r = int(r * z)
 	g = int(g * z)
 	b = int(b * z)
-	print(z, r, g, b)
 	return bytes([index, r, g, b])
 
 
 if __name__ == '__main__':
 
-	arduino = Serial("COM6", 115200, timeout=0.1)
+	arduino = Serial("COM15", 115200, timeout=0.1)
 
 	handshake(b"\xfe\xfa", b"\xff")
 
@@ -67,6 +63,8 @@ if __name__ == '__main__':
 					colors.append(screen.getpixel((x, y)))
 			else:
 				colors.append(screen.getpixel((x, 0)))
+
+		colors = list(reversed(colors))
 
 		if lastColors is None:
 			lastColors = colors
@@ -90,6 +88,6 @@ if __name__ == '__main__':
 				data += getColorData(update[0], update[1])
 			sendUpdates(data)
 
-		time.sleep(0.4)
+		time.sleep(0.3)
 
 		lastColors = colors

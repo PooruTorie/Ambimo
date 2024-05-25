@@ -32,7 +32,8 @@ void loop() {
             color[colorIndex] = data;
             colorIndex++;
             if (colorIndex == 3) {
-                leds.setColor(zone, color[0], color[1], color[2]);
+                leds.setColor(zone * 2, color[0], color[1], color[2]);
+                leds.setColor(zone * 2 + 1, color[0], color[1], color[2]);
                 colorIndex = 0;
                 zone++;
             }
